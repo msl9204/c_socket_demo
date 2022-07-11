@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +14,7 @@
 #include <unistd.h>
 
 #define PORT 5050
+#define HTTP_HEADER "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"
 
 int bind_lsock(int lsock) {
   struct sockaddr_in sin;
@@ -24,11 +26,20 @@ int bind_lsock(int lsock) {
   return bind(lsock, (struct sockaddr *)&sin, sizeof(sin));
 }
 
+void *pthread_ex(void *arg) {
+  int i = 0;
+  while (i < 10) {
+    sleep(1);
+    printf("thread.. %d\n", i);
+    i++;
+  }
+  return 0;
+}
+
 int main() {
 
   int lsock, asock, valread;
   char buffer[1024] = {0}, rt_txt[500];
-  char *rt_txt_p;
 
   struct sockaddr_in remote_sin;
   socklen_t remote_sin_len;
@@ -46,6 +57,9 @@ int main() {
 
   printf("[INFO] waiting for connection... \n");
 
+  pthread_t thread_id;
+  pthread_create(&thread_id, NULL, pthread_ex, NULL);
+
   while (1) {
 
     asock = accept(lsock, (struct sockaddr *)&remote_sin, &remote_sin_len);
@@ -60,16 +74,13 @@ int main() {
     printf("%s\n", buffer);
 
     // write
-    strcpy(rt_txt_p, "HTTP/1.1 200 OK\r\n");
-    strcat(rt_txt_p, "Content-Type: text/plain\r\n");
-    strcat(rt_txt_p, "\r\n");
-    strcat(rt_txt_p, "hello123123123");
+    strcpy(rt_txt, HTTP_HEADER);
+    strcat(rt_txt, "hello123123123");
 
-    char test_text[] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nhello123123123";
-    printf("%d", *rt_txt_p);
+    printf("%s", rt_txt);
 
-    printf("\n Size: %d \n", sizeof(*rt_txt_p));
-    write(asock, rt_txt_p, sizeof(*rt_txt_p));
+    printf("\n Size: %lu \n", sizeof(rt_txt));
+    write(asock, rt_txt, sizeof(rt_txt));
 
     close(asock);
   }
