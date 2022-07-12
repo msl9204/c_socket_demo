@@ -69,19 +69,26 @@ int main() {
     }
 
     // read
+    memset(buffer, 0x00, sizeof(buffer));
+    memset(rt_txt, 0x00, sizeof(rt_txt));
     valread = read(asock, buffer, sizeof(buffer));
+    printf("valread Length: %lu\n", sizeof(valread));
+
     printf("=====Received!!=====\n");
     printf("%s\n", buffer);
+    printf("=====Buffer END=====\n");
 
     // write
     strcpy(rt_txt, HTTP_HEADER);
     strcat(rt_txt, "hello123123123");
 
-    printf("%s", rt_txt);
+    // printf("%s", rt_txt);
 
-    printf("\n Size: %lu \n", sizeof(rt_txt));
-    write(asock, rt_txt, sizeof(rt_txt));
+    // printf("\nSize: %lu \n", sizeof(rt_txt));
+    printf("Length: %lu\n", strlen(rt_txt));
+    write(asock, rt_txt, strlen(rt_txt));
 
     close(asock);
+    printf("=====CLOSED=====\n");
   }
 }
